@@ -13,7 +13,9 @@ public interface IMovementBootcoinService {
 
      Mono<Void> delete(String id);
 
-     Mono<MovementEntity> update(String id, MovementEntity product);
+     Mono<MovementEntity> create(MovementEntity movement);
+
+     Mono<MovementEntity> update(MovementEntity product);
 
      Mono<MovementEntity> findById(String id);
 

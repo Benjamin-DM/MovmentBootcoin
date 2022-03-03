@@ -31,7 +31,7 @@ public class MovementBootcoinController {
 
     @PutMapping("/{id}")
     public Mono<MovementEntity> update(@PathVariable String id, @RequestBody MovementEntity product) {
-        return service.update(id, product);
+        return service.update(product);
     }
 
     @DeleteMapping("/{id}")

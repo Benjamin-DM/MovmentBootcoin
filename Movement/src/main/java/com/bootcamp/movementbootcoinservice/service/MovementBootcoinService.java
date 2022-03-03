@@ -5,51 +5,61 @@ import com.bootcamp.movementbootcoinservice.model.MovementEntity;
 import com.bootcamp.movementbootcoinservice.repository.MovementBootcoinRepository;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
+import java.util.Objects;
 
+
+@Slf4j
 @RequiredArgsConstructor
 @Service
-@AllArgsConstructor
-//@ConditionalOnProperty(name = "cache.enabled", havingValue = "false")
-public class MovementBootcoinService implements IMovementBootcoinService {
+public class MovementBootcoinService implements MoveementServiceRed {
+    private final KafkaTemplate<String, MovementEntity> kafkaTemplate;
+    private static final String TOPIC_NAME = "demo";
+    private final MovementBootcoinRepository repository;
 
-    //Clorox
-    @Autowired
-    private MovementBootcoinRepository repository;
 
+    @Override
+    public Mono<MovementEntity> save(MovementEntity client) {
+        return null;
+    }
 
     @Override
     public Flux<MovementEntity> findAll() {
-        return repository.findAll();
-    }
-
-    @Override
-    public Mono<MovementEntity> save(MovementEntity currency) {
-        return  repository.save(currency);
-    }
-
-    @Override
-    public Mono<Void> delete(String id) {
-        return repository.deleteById(id);
-    }
-
-    @Override
-    public Mono<MovementEntity> update(String id, MovementEntity product) {
-        return repository.findById(id).flatMap(newProduct -> {
-            product.setId(newProduct.getId());
-            product.setCreateDate(LocalDate.now());
-            return repository.save(product);
-        }).switchIfEmpty(Mono.empty());
+        return null;
     }
 
     @Override
     public Mono<MovementEntity> findById(String id) {
-        return repository.findById(id);
+        return null;
     }
 
+    @Override
+    public Mono<MovementEntity> create(MovementEntity movement) {
+        return repository.insert(movement)
+                .map(this::sendToKafka);
+    }
+
+    @Override
+    public Mono<MovementEntity> update(MovementEntity movement) {
+        return repository.save(movement);
+    }
+
+    @Override
+    public Mono<Void> delete(String id) {
+        return null;
+    }
+
+    public MovementEntity sendToKafka(MovementEntity movement) {
+        kafkaTemplate.send(TOPIC_NAME, movement.getNumTransactionPayment(), movement)
+                .addCallback(result -> {
+                    var resultNonNull = Objects.requireNonNull(result);
+                    log.info("response: {}", resultNonNull.getProducerRecord());
+                }, Throwable::printStackTrace);
+        return movement;
+    }
 }
